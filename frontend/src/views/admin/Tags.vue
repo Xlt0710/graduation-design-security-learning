@@ -19,7 +19,9 @@ async function save() {
     dialogVisible.value = false
     ElMessage.success('创建成功')
     fetchTags()
-  } catch (e) { /* handled */ }
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '创建失败')
+  }
 }
 
 async function remove(id) {
@@ -27,7 +29,9 @@ async function remove(id) {
     await api.delete(`/admin/tags/${id}`)
     ElMessage.success('已删除')
     fetchTags()
-  } catch (e) { /* handled */ }
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '删除失败')
+  }
 }
 </script>
 

@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useAuth } from '../stores/auth'
 import api from '../api'
 
@@ -19,11 +20,12 @@ async function handleLogin() {
   try {
     await login(username.value, password.value)
     router.push('/dashboard')
+  } catch (e) {
+    ElMessage.error(e.message || '登录失败')
   } finally {
     loading.value = false
   }
 }
-import { ElMessage } from 'element-plus'
 </script>
 
 <template>

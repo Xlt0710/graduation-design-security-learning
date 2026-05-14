@@ -11,7 +11,7 @@ public interface QuizService {
 
     QuizDetailResponse getQuizDetail(Long quizId);
 
-    QuizSubmitResponse submitQuiz(Long quizId, Map<Long, String> answers, Long userId);
+    QuizSubmitResponse submitQuiz(Long quizId, Map<Long, Object> answers, Long userId);
 
     List<QuizRecordResponse> getRecords(Long userId);
 }

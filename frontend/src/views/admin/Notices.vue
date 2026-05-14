@@ -36,7 +36,9 @@ async function save() {
     dialogVisible.value = false
     ElMessage.success('保存成功')
     fetchNotices()
-  } catch (e) { /* handled */ }
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '操作失败')
+  }
 }
 
 async function remove(id) {
@@ -44,7 +46,9 @@ async function remove(id) {
     await api.delete(`/admin/notices/${id}`)
     ElMessage.success('已删除')
     fetchNotices()
-  } catch (e) { /* handled */ }
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '删除失败')
+  }
 }
 </script>
 

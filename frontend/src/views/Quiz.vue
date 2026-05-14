@@ -65,12 +65,12 @@ const questionTypeMap = { 1: '单选题', 2: '多选题' }
         <p class="q-content">{{ q.content }}</p>
         <div v-if="q.optionsJson" class="q-options">
           <el-radio-group v-if="q.questionType === 1" v-model="userAnswers[q.id]" class="opt-group">
-            <el-radio v-for="(opt, i) in JSON.parse(q.optionsJson)" :key="i" :value="opt" class="opt-item">
+            <el-radio v-for="(opt, i) in JSON.parse(q.optionsJson)" :key="i" :value="opt.charAt(0)" class="opt-item">
               {{ opt }}
             </el-radio>
           </el-radio-group>
           <el-checkbox-group v-else v-model="userAnswers[q.id]" class="opt-group">
-            <el-checkbox v-for="(opt, i) in JSON.parse(q.optionsJson)" :key="i" :value="opt" :label="opt" class="opt-item">
+            <el-checkbox v-for="(opt, i) in JSON.parse(q.optionsJson)" :key="i" :value="opt.charAt(0)" class="opt-item">
               {{ opt }}
             </el-checkbox>
           </el-checkbox-group>

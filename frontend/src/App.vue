@@ -1,9 +1,11 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useAuth } from './stores/auth'
 
 const router = useRouter()
 const route = useRoute()
+const { user, isAdmin, logout } = useAuth()
 const isGuest = ref(route.path === '/login' || route.path === '/register')
 
 watch(() => route.path, (path) => {
@@ -11,8 +13,7 @@ watch(() => route.path, (path) => {
 })
 
 function handleLogout() {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
+  logout()
   router.push('/login')
 }
 
@@ -59,14 +60,14 @@ function isActive(path) {
           <el-icon><Document /></el-icon>
           <span>漏洞报告</span>
         </el-menu-item>
-        <el-menu-item index="/admin/notices">
+        <el-menu-item index="/admin/notices" v-if="isAdmin">
           <el-icon><Setting /></el-icon>
           <span>管理后台</span>
         </el-menu-item>
       </el-menu>
 
       <div class="sidebar-footer">
-        <span class="user-tag">{{ $route.query.username || 'User' }}</span>
+        <span class="user-tag">{{ user?.username || $route.query.username || 'User' }}</span>
         <el-button text @click="handleLogout" class="logout-btn">
           <el-icon><SwitchButton /></el-icon>
         </el-button>

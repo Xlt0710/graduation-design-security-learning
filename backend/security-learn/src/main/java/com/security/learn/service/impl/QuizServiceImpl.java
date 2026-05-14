@@ -71,7 +71,7 @@ public class QuizServiceImpl implements QuizService {
 
     @Override
     @Transactional
-    public QuizSubmitResponse submitQuiz(Long quizId, Map<Long, String> answers, Long userId) {
+    public QuizSubmitResponse submitQuiz(Long quizId, Map<Long, Object> answers, Long userId) {
         Quiz quiz = quizMapper.selectById(quizId);
         if (quiz == null) {
             throw new IllegalArgumentException("测验不存在");
@@ -85,7 +85,10 @@ public class QuizServiceImpl implements QuizService {
         List<QuizSubmitResponse.QuestionResult> results = new ArrayList<>();
 
         for (QuizQuestion q : questions) {
-            String userAnswer = answers.getOrDefault(q.getId(), "");
+            Object rawAnswer = answers.getOrDefault(q.getId(), "");
+            String userAnswer = rawAnswer instanceof String ? (String) rawAnswer
+                    : rawAnswer instanceof List ? objectMapper.valueToTree(rawAnswer).toString()
+                    : String.valueOf(rawAnswer);
             String correctAnswer = q.getAnswerJson();
             boolean isCorrect = checkAnswer(userAnswer, correctAnswer, q.getQuestionType());
 
@@ -164,6 +167,12 @@ public class QuizServiceImpl implements QuizService {
                 return false;
             }
         }
-        return userAnswer.trim().equalsIgnoreCase(correctAnswer.trim());
+        // 单选题：MySQL JSON 类型可能返回带引号的字符串，需要解析
+        try {
+            String parsed = objectMapper.readValue(correctAnswer, String.class);
+            return userAnswer.trim().equalsIgnoreCase(parsed.trim());
+        } catch (Exception e) {
+            return userAnswer.trim().equalsIgnoreCase(correctAnswer.replaceAll("^\"|\"$", "").trim());
+        }
     }
 }

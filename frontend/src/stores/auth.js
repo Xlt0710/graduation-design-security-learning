@@ -10,14 +10,17 @@ export function useAuth() {
   const isLoggedIn = computed(() => !!state.token)
   const user = computed(() => state.user)
   const isAdmin = computed(() => {
-    // admin check by calling /api/auth/me or having admin roles
-    return false
+    const roles = state.user?.roles
+    return Array.isArray(roles) && roles.includes('ADMIN')
   })
 
   async function login(username, password) {
     const res = await api.post('/auth/login', { username, password })
+    if (res.code !== 200) {
+      throw new Error(res.message || '登录失败')
+    }
     state.token = res.data.token
-    state.user = { id: res.data.userId, username: res.data.username, nickname: res.data.nickname }
+    state.user = { id: res.data.userId, username: res.data.username, nickname: res.data.nickname, roles: res.data.roles || [] }
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('user', JSON.stringify(state.user))
     return res.data
