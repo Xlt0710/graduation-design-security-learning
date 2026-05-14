@@ -119,7 +119,17 @@ public class UserServiceImpl implements UserService {
         }
         String token = jwtUtil.generateToken(user.getId(), user.getUsername());
         log.info("用户登录成功: username={}, id={}", user.getUsername(), user.getId());
-        return new LoginResponse(token, user.getId(), user.getUsername(), user.getNickname());
+        return new LoginResponse(token, user.getId(), user.getUsername(), user.getNickname(), getRoleCodes(user.getId()));
+    }
+
+    private List<String> getRoleCodes(Long userId) {
+        List<UserRole> userRoles = userRoleMapper.selectList(
+                new LambdaQueryWrapper<UserRole>().eq(UserRole::getUserId, userId));
+        if (userRoles.isEmpty()) return List.of();
+        List<Long> roleIds = userRoles.stream().map(UserRole::getRoleId).toList();
+        return roleMapper.selectBatchIds(roleIds).stream()
+                .map(Role::getRoleCode)
+                .toList();
     }
 
     @Override
@@ -131,7 +141,7 @@ public class UserServiceImpl implements UserService {
         if (user.getStatus() != null && user.getStatus() == 0) {
             throw new IllegalArgumentException("账号已被禁用");
         }
-        return new UserInfoResponse(user.getId(), user.getUsername(), user.getNickname(), user.getEmail());
+        return new UserInfoResponse(user.getId(), user.getUsername(), user.getNickname(), user.getEmail(), getRoleCodes(userId));
     }
 
     @Override
@@ -154,7 +164,7 @@ public class UserServiceImpl implements UserService {
         }
         user.setUpdatedAt(LocalDateTime.now());
         userMapper.updateById(user);
-        return new UserInfoResponse(user.getId(), user.getUsername(), user.getNickname(), user.getEmail());
+        return new UserInfoResponse(user.getId(), user.getUsername(), user.getNickname(), user.getEmail(), getRoleCodes(userId));
     }
 
     @Override

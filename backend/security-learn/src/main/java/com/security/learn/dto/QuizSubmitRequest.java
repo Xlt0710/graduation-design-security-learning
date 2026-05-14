@@ -7,5 +7,5 @@ import java.util.Map;
 @Data
 public class QuizSubmitRequest {
 
-    private Map<Long, String> answers;
+    private Map<Long, Object> answers;
 }

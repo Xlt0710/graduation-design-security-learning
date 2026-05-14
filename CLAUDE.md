@@ -16,7 +16,7 @@
 
 ## 当前进度（截至 2026-05-14）
 
-### 后端模块完成度：8/8（100%），103 个 Java 文件，编译零错误 ✅
+### 后端：8/8 模块完成，103 个 Java 文件，编译零错误 ✅
 
 | 模块 | 状态 | Controller | Service | 对应表 |
 |------|------|------------|---------|--------|
@@ -29,7 +29,23 @@
 | 漏洞报告 | ✅ 已审查 | ReportController | ReportServiceImpl | vulnerability_report |
 | 管理后台 | ✅ 已审查 | AdminController | AdminServiceImpl | notice, tag |
 
-### 已创建的文件清单
+### 前端：27 个文件，Vite + Vue 3，第8阶段完成 ✅
+
+| 类别 | 文件 |
+|------|------|
+| 入口/配置 | App.vue, main.js, router/index.js, vite.config.js |
+| 样式/状态 | styles/global.css (深色赛博朋克主题), stores/auth.js |
+| API 层 | api/index.js (axios + token 拦截器 + 业务错误码检查) |
+| 登录/注册 | Login.vue, Register.vue (终端风格 UI) |
+| 仪表盘 | Dashboard.vue (4 统计卡片 + AI 推荐 + 快速入口) |
+| 课程 | Courses.vue (筛选+进度条), CourseDetail.vue (章节列表+完成进度) |
+| 靶场 | Labs.vue (筛选+状态), LabDetail.vue (Flag 提交+提示+收藏) |
+| 测验 | Quiz.vue (历史记录+答题模式, radio/checkbox/input) |
+| AI 助手 | AiChat.vue (对话气泡+快捷提问+打字动画) |
+| 漏洞报告 | Reports.vue (列表+风险标签), ReportEdit.vue (AI 生成/手动编辑) |
+| 管理后台 | admin/Notices.vue (通知 CRUD), admin/Tags.vue (标签 CRUD) |
+
+### 后端已创建的文件
 
 **Entity (18个):** User, Role, UserRole, Course, Chapter, UserCourseProgress, UserChapterProgress, Lab, LabAttempt, LabFavorite, Quiz, QuizQuestion, QuizRecord, AiRecommendation, AiConversation, VulnerabilityReport, Notice, Tag
 
@@ -41,11 +57,11 @@
 
 **Controller (9个):** AuthController, UserController, CourseController, ChapterController, LabController, QuizController, AiController, ReportController, AdminController
 
-**Security:** JwtUtil (JJWT 0.12+), JwtAuthenticationFilter (OncePerRequestFilter), SecurityConfig (无状态会话)
+**Security:** JwtUtil (JJWT 0.12+), JwtAuthenticationFilter (OncePerRequestFilter), SecurityConfig (无状态会话), SecurityUtils, LoginRateLimiter, RoleConstants
 
 **Common:** Result<T> (统一响应), GlobalExceptionHandler
 
-**配置:** application.yml, init.sql (17张表 + 种子数据)
+**配置:** application.yml, init.sql (17张表), seed_data.sql (联调测试数据)
 
 ### 架构关键设计
 
@@ -59,6 +75,9 @@
 - **AI 推荐**：基于弱项分析（漏洞类型正确率 < 60%）的规则评分算法 + 关键词匹配 AI 对话
 - **AI 漏洞报告**：模板化生成结构化漏洞报告（含复现步骤、影响分析、修复建议），支持手动创建/编辑
 - **管理后台**：通知/标签 CRUD + 管理员角色校验，GET 公开/写操作需 ADMIN 权限
+- **前端深色主题**：全局 CSS 变量覆盖 Element Plus 80+ 属性，Vite proxy `/api` → `http://localhost:8080`
+- **前端路由守卫**：router.beforeEach 根据 token 存在性自动跳转登录页或仪表盘
+- **前端认证**：axios 请求拦截器自动注入 Bearer token，401 响应自动清除 token 并跳转登录
 
 ### 已知待改进
 
@@ -66,7 +85,6 @@
 - [x] ~~异常处理只有两类~~ → 已新增 MethodArgumentNotValidException 处理 + 隐藏内部错误消息
 - [x] ~~DTO 无声明式校验~~ → 已添加 @Valid/@NotBlank/@Size/@Email
 - [ ] 改密码后旧 token 仍有效（可加 token_version 字段解决，涉及 DB 改动暂缓）
-- [ ] 前端项目尚未启动
 
 ### 认证模块代码审查结果（2026-05-12）
 
@@ -104,9 +122,25 @@
 - MySQL 8.0.18 Docker (容器名 `mysql`, 端口 3306, 密码 `123456`)
 - 本机 MySQL80 服务已停止（避免端口冲突）
 
+### 第8阶段联调修复记录（2026-05-14）
+
+| 问题 | 根因 | 修复 |
+|------|------|------|
+| 中文乱码（课程名、报告） | MySQL connection charset 为 latin1 | 重建 DB 时指定 `--default-character-set=utf8mb4` |
+| 管理后台操作无反应 | catch 块静默吞错误 + 前端无 roles 信息 | 补 ElMessage.error + LoginResponse/前端 store 加 roles |
+| 注册 CORS 403 | CORS 配置只允许固定端口，dev server 换了端口 | CorsConfig 改为 `http://localhost:*` 通配符端口 |
+| 登录无反应 | 后端业务错误走 HTTP 200（Result 模式），axios 拦截器未检查 code | 拦截器加 `data.code !== 200` 时 reject，Login.vue 加 catch |
+| 测验提交 500 | QuizSubmitRequest 的 answers 类型 Map<Long, String> 不支持多选题数组 | 改为 Map<Long, Object> |
+| 测验判分错误 | MySQL JSON 列返回 `"B"`（带引号字符串），判等失败 | checkAnswer 用 Jackson 解析 JSON 字符串 |
+| 测验选项值不匹配 | 前端发完整选项文本 "B. 使用预编译语句"，后端存字母 "B" | Quiz.vue 用 `opt.charAt(0)` 取值 |
+
+### 种子数据
+
+- `backend/.../resources/seed_data.sql` — 包含用户（admin/student）、课程（SQL注入/XSS/CSRF各含3章）、靶场（6个含难度/类型/CVE）、测验（3套含10题）、通知（3条）
+
 ## 待办清单
 
 - [x] ~~**第5阶段：** AI 推荐模块（规则评分推荐算法 + 关键词AI对话）~~
 - [x] ~~**第6阶段：** 漏洞报告模块 + 管理后台（notice/tag CRUD）~~
-- [ ] **第7阶段：** Vue 3 前端项目（Vite 创建、登录/注册/首页布局）
-- [ ] **第8阶段：** 前后端联调、数据填充、整体打磨
+- [x] ~~**第7阶段：** Vue 3 前端项目（Vite 创建、登录/注册/首页布局）~~
+- [x] ~~**第8阶段：** 前后端联调、数据填充、整体打磨~~
