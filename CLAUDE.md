@@ -16,30 +16,30 @@
 
 ## 当前进度（截至 2026-05-14）
 
-### 后端模块完成度：7/8（约 88%），83 个 Java 文件，编译零错误
+### 后端模块完成度：7.5/8（约 94%），101 个 Java 文件，编译零错误
 
 | 模块 | 状态 | Controller | Service | 对应表 |
 |------|------|------------|---------|--------|
-| 认证 (Auth) | ✅ | AuthController | UserServiceImpl | user, role, user_role |
+| 认证 (Auth) | ✅ 已审查 | AuthController | UserServiceImpl | user, role, user_role |
 | 课程 & 章节 | ✅ | CourseController, ChapterController | CourseServiceImpl, ChapterServiceImpl | course, chapter, user_course_progress, user_chapter_progress |
 | 靶场 (Lab) | ✅ | LabController | LabServiceImpl | lab, lab_attempt, lab_favorite |
 | 测验 (Quiz) | ✅ | QuizController | QuizServiceImpl | quiz, quiz_question, quiz_record |
 | 用户管理 | ✅ | UserController | UserServiceImpl | user, user_course_progress, user_chapter_progress, lab_attempt, quiz_record |
-| AI 推荐 | ✅ | AiController | AiServiceImpl | ai_recommendation, ai_conversation |
-| 漏洞报告 | ❌ | 未创建 | 未创建 | vulnerability_report（表已建） |
-| 管理后台 | ❌ | 未创建 | 未创建 | notice, tag（表已建） |
+| AI 推荐 | ✅ 已审查 | AiController | AiServiceImpl | ai_recommendation, ai_conversation |
+| 漏洞报告 | ✅ 已审查 | ReportController | ReportServiceImpl | vulnerability_report |
+| 管理后台 | ❌ | 未创建 | 未创建 | notice, tag（表已建，Entity/Mapper 已建，缺 Service/Controller） |
 
 ### 已创建的文件清单
 
-**Entity (15个):** User, Role, UserRole, Course, Chapter, UserCourseProgress, UserChapterProgress, Lab, LabAttempt, LabFavorite, Quiz, QuizQuestion, QuizRecord, AiRecommendation, AiConversation
+**Entity (18个):** User, Role, UserRole, Course, Chapter, UserCourseProgress, UserChapterProgress, Lab, LabAttempt, LabFavorite, Quiz, QuizQuestion, QuizRecord, AiRecommendation, AiConversation, VulnerabilityReport, Notice, Tag
 
-**Mapper (15个):** 全部继承 BaseMapper<T>，零 XML 配置
+**Mapper (18个):** 全部继承 BaseMapper<T>，零 XML 配置
 
-**DTO (22个):** LoginRequest/Response, RegisterRequest, UserInfoResponse, UpdateProfileRequest, ChangePasswordRequest, UserStatisticsResponse, CourseListResponse, CourseDetailResponse, ChapterDetailResponse, LabListResponse, LabDetailResponse, LabSubmitRequest/Response, LabAttemptResponse, QuizDetailResponse, QuizSubmitRequest/Response, QuizRecordResponse, RecommendationResponse, ChatRequest, ChatResponse, ConversationHistoryResponse
+**DTO (30个):** LoginRequest/Response, RegisterRequest, UserInfoResponse, UpdateProfileRequest, ChangePasswordRequest, UserStatisticsResponse, CourseListResponse, CourseDetailResponse, ChapterDetailResponse, LabListResponse, LabDetailResponse, LabSubmitRequest/Response, LabAttemptResponse, QuizDetailResponse, QuizSubmitRequest/Response, QuizRecordResponse, RecommendationResponse, ChatRequest, ChatResponse, ConversationHistoryResponse, ReportGenerateRequest, ReportRequest, ReportResponse, ReportListResponse, NoticeRequest, NoticeResponse, TagRequest, TagResponse
 
-**Service (6接口+6实现):** UserService, CourseService, ChapterService, LabService, QuizService, AiService
+**Service (7接口+7实现):** UserService, CourseService, ChapterService, LabService, QuizService, AiService, ReportService
 
-**Controller (7个):** AuthController, UserController, CourseController, ChapterController, LabController, QuizController, AiController
+**Controller (8个):** AuthController, UserController, CourseController, ChapterController, LabController, QuizController, AiController, ReportController
 
 **Security:** JwtUtil (JJWT 0.12+), JwtAuthenticationFilter (OncePerRequestFilter), SecurityConfig (无状态会话)
 
@@ -60,11 +60,11 @@
 
 ### 已知待改进
 
-- JWT Filter 未将 userId 注入 Authentication，导致每个方法额外查库转 username→userId
-- 改密码后旧 token 仍有效（可加 token_version 字段解决）
-- 异常处理只有 IllegalArgumentException(400) 和 Exception(500) 两类
-- DTO 无 @Valid 声明式校验，手动 StringUtils 校验
-- 前端项目尚未启动
+- [x] ~~JWT Filter 未将 userId 注入 Authentication~~ → 已修复：userId 存入 Authentication.details，SecurityUtils 统一获取
+- [x] ~~异常处理只有两类~~ → 已新增 MethodArgumentNotValidException 处理 + 隐藏内部错误消息
+- [x] ~~DTO 无声明式校验~~ → 已添加 @Valid/@NotBlank/@Size/@Email
+- [ ] 改密码后旧 token 仍有效（可加 token_version 字段解决，涉及 DB 改动暂缓）
+- [ ] 前端项目尚未启动
 
 ### 认证模块代码审查结果（2026-05-12）
 
