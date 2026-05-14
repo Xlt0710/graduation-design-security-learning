@@ -21,10 +21,10 @@
 | 模块 | 状态 | Controller | Service | 对应表 |
 |------|------|------------|---------|--------|
 | 认证 (Auth) | ✅ 已审查 | AuthController | UserServiceImpl | user, role, user_role |
-| 课程 & 章节 | ✅ | CourseController, ChapterController | CourseServiceImpl, ChapterServiceImpl | course, chapter, user_course_progress, user_chapter_progress |
-| 靶场 (Lab) | ✅ | LabController | LabServiceImpl | lab, lab_attempt, lab_favorite |
-| 测验 (Quiz) | ✅ | QuizController | QuizServiceImpl | quiz, quiz_question, quiz_record |
-| 用户管理 | ✅ | UserController | UserServiceImpl | user, user_course_progress, user_chapter_progress, lab_attempt, quiz_record |
+| 课程 & 章节 | ✅ 已审查 | CourseController, ChapterController | CourseServiceImpl, ChapterServiceImpl | course, chapter, user_course_progress, user_chapter_progress |
+| 靶场 (Lab) | ✅ 已审查 | LabController | LabServiceImpl | lab, lab_attempt, lab_favorite |
+| 测验 (Quiz) | ✅ 已审查 | QuizController | QuizServiceImpl | quiz, quiz_question, quiz_record |
+| 用户管理 | ✅ 已审查 | UserController | UserServiceImpl | user, user_course_progress, user_chapter_progress, lab_attempt, quiz_record |
 | AI 推荐 | ✅ 已审查 | AiController | AiServiceImpl | ai_recommendation, ai_conversation |
 | 漏洞报告 | ✅ 已审查 | ReportController | ReportServiceImpl | vulnerability_report |
 | 管理后台 | ✅ 已审查 | AdminController | AdminServiceImpl | notice, tag |
