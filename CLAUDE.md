@@ -14,9 +14,9 @@
 - `系统功能需求说明书.md` — 完整需求文档（8大模块、15张表、60+ API）
 - `agents.md` — 开发者背景说明
 
-## 当前进度（截至 2026-05-12）
+## 当前进度（截至 2026-05-14）
 
-### 后端模块完成度：6/8（约 75%），68 个 Java 文件，编译零错误
+### 后端模块完成度：7/8（约 88%），83 个 Java 文件，编译零错误
 
 | 模块 | 状态 | Controller | Service | 对应表 |
 |------|------|------------|---------|--------|
@@ -25,21 +25,21 @@
 | 靶场 (Lab) | ✅ | LabController | LabServiceImpl | lab, lab_attempt, lab_favorite |
 | 测验 (Quiz) | ✅ | QuizController | QuizServiceImpl | quiz, quiz_question, quiz_record |
 | 用户管理 | ✅ | UserController | UserServiceImpl | user, user_course_progress, user_chapter_progress, lab_attempt, quiz_record |
-| AI 推荐 | ❌ | 未创建 | 未创建 | ai_recommendation, ai_conversation（表已建） |
+| AI 推荐 | ✅ | AiController | AiServiceImpl | ai_recommendation, ai_conversation |
 | 漏洞报告 | ❌ | 未创建 | 未创建 | vulnerability_report（表已建） |
 | 管理后台 | ❌ | 未创建 | 未创建 | notice, tag（表已建） |
 
 ### 已创建的文件清单
 
-**Entity (13个):** User, Role, UserRole, Course, Chapter, UserCourseProgress, UserChapterProgress, Lab, LabAttempt, LabFavorite, Quiz, QuizQuestion, QuizRecord
+**Entity (15个):** User, Role, UserRole, Course, Chapter, UserCourseProgress, UserChapterProgress, Lab, LabAttempt, LabFavorite, Quiz, QuizQuestion, QuizRecord, AiRecommendation, AiConversation
 
-**Mapper (13个):** 全部继承 BaseMapper<T>，零 XML 配置
+**Mapper (15个):** 全部继承 BaseMapper<T>，零 XML 配置
 
-**DTO (14个):** LoginRequest/Response, RegisterRequest, UserInfoResponse, UpdateProfileRequest, ChangePasswordRequest, UserStatisticsResponse, CourseListResponse, CourseDetailResponse, ChapterDetailResponse, LabListResponse, LabDetailResponse, LabSubmitRequest/Response, LabAttemptResponse, QuizDetailResponse, QuizSubmitRequest/Response, QuizRecordResponse
+**DTO (22个):** LoginRequest/Response, RegisterRequest, UserInfoResponse, UpdateProfileRequest, ChangePasswordRequest, UserStatisticsResponse, CourseListResponse, CourseDetailResponse, ChapterDetailResponse, LabListResponse, LabDetailResponse, LabSubmitRequest/Response, LabAttemptResponse, QuizDetailResponse, QuizSubmitRequest/Response, QuizRecordResponse, RecommendationResponse, ChatRequest, ChatResponse, ConversationHistoryResponse
 
-**Service (5接口+5实现):** UserService, CourseService, ChapterService, LabService, QuizService
+**Service (6接口+6实现):** UserService, CourseService, ChapterService, LabService, QuizService, AiService
 
-**Controller (6个):** AuthController, UserController, CourseController, ChapterController, LabController, QuizController
+**Controller (7个):** AuthController, UserController, CourseController, ChapterController, LabController, QuizController, AiController
 
 **Security:** JwtUtil (JJWT 0.12+), JwtAuthenticationFilter (OncePerRequestFilter), SecurityConfig (无状态会话)
 
@@ -52,9 +52,11 @@
 - **三层解耦**: Controller → Service → Mapper，全部构造器注入
 - **无状态 JWT 认证**：token 24h 有效期，每次请求独立验证
 - **权限模型**：`/api/auth/register` `/api/auth/login` 及 GET 课程/章节/靶场公开，其余需认证
-- **双重认证**：`resolveUserId`（可选登录）用于公开接口，`requireUserId`（强制登录）用于写操作
+- **userId 注入**：JWT Filter 将 userId 存入 Authentication.details，SecurityUtils 统一获取，各 Controller 无需查库
+- **输入校验**：DTO 使用 @Valid/@NotBlank/@Size/@Email 声明式校验，GlobalExceptionHandler 统一处理
 - **密码加密**：BCryptPasswordEncoder
 - **零 XML**：MyBatis Plus 纯注解 + LambdaQueryWrapper
+- **AI 推荐**：基于弱项分析（漏洞类型正确率 < 60%）的规则评分算法 + 关键词匹配 AI 对话
 
 ### 已知待改进
 
@@ -102,7 +104,7 @@
 
 ## 待办清单
 
-- [ ] **第5阶段：** AI 推荐模块（AI 推荐算法、对接大模型 API、ai_conversation 记录）
+- [x] ~~**第5阶段：** AI 推荐模块（规则评分推荐算法 + 关键词AI对话）~~
 - [ ] **第6阶段：** 漏洞报告模块 + 管理后台（notice/tag CRUD）
 - [ ] **第7阶段：** Vue 3 前端项目（Vite 创建、登录/注册/首页布局）
 - [ ] **第8阶段：** 前后端联调、数据填充、整体打磨
