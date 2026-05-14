@@ -16,7 +16,7 @@
 
 ## 当前进度（截至 2026-05-14）
 
-### 后端模块完成度：7.5/8（约 94%），101 个 Java 文件，编译零错误
+### 后端模块完成度：8/8（100%），103 个 Java 文件，编译零错误 ✅
 
 | 模块 | 状态 | Controller | Service | 对应表 |
 |------|------|------------|---------|--------|
@@ -27,7 +27,7 @@
 | 用户管理 | ✅ | UserController | UserServiceImpl | user, user_course_progress, user_chapter_progress, lab_attempt, quiz_record |
 | AI 推荐 | ✅ 已审查 | AiController | AiServiceImpl | ai_recommendation, ai_conversation |
 | 漏洞报告 | ✅ 已审查 | ReportController | ReportServiceImpl | vulnerability_report |
-| 管理后台 | ❌ | 未创建 | 未创建 | notice, tag（表已建，Entity/Mapper 已建，缺 Service/Controller） |
+| 管理后台 | ✅ 已审查 | AdminController | AdminServiceImpl | notice, tag |
 
 ### 已创建的文件清单
 
@@ -37,9 +37,9 @@
 
 **DTO (30个):** LoginRequest/Response, RegisterRequest, UserInfoResponse, UpdateProfileRequest, ChangePasswordRequest, UserStatisticsResponse, CourseListResponse, CourseDetailResponse, ChapterDetailResponse, LabListResponse, LabDetailResponse, LabSubmitRequest/Response, LabAttemptResponse, QuizDetailResponse, QuizSubmitRequest/Response, QuizRecordResponse, RecommendationResponse, ChatRequest, ChatResponse, ConversationHistoryResponse, ReportGenerateRequest, ReportRequest, ReportResponse, ReportListResponse, NoticeRequest, NoticeResponse, TagRequest, TagResponse
 
-**Service (7接口+7实现):** UserService, CourseService, ChapterService, LabService, QuizService, AiService, ReportService
+**Service (8接口+8实现):** UserService, CourseService, ChapterService, LabService, QuizService, AiService, ReportService, AdminService
 
-**Controller (8个):** AuthController, UserController, CourseController, ChapterController, LabController, QuizController, AiController, ReportController
+**Controller (9个):** AuthController, UserController, CourseController, ChapterController, LabController, QuizController, AiController, ReportController, AdminController
 
 **Security:** JwtUtil (JJWT 0.12+), JwtAuthenticationFilter (OncePerRequestFilter), SecurityConfig (无状态会话)
 
@@ -57,6 +57,8 @@
 - **密码加密**：BCryptPasswordEncoder
 - **零 XML**：MyBatis Plus 纯注解 + LambdaQueryWrapper
 - **AI 推荐**：基于弱项分析（漏洞类型正确率 < 60%）的规则评分算法 + 关键词匹配 AI 对话
+- **AI 漏洞报告**：模板化生成结构化漏洞报告（含复现步骤、影响分析、修复建议），支持手动创建/编辑
+- **管理后台**：通知/标签 CRUD + 管理员角色校验，GET 公开/写操作需 ADMIN 权限
 
 ### 已知待改进
 
@@ -105,6 +107,6 @@
 ## 待办清单
 
 - [x] ~~**第5阶段：** AI 推荐模块（规则评分推荐算法 + 关键词AI对话）~~
-- [ ] **第6阶段：** 漏洞报告模块 + 管理后台（notice/tag CRUD）
+- [x] ~~**第6阶段：** 漏洞报告模块 + 管理后台（notice/tag CRUD）~~
 - [ ] **第7阶段：** Vue 3 前端项目（Vite 创建、登录/注册/首页布局）
 - [ ] **第8阶段：** 前后端联调、数据填充、整体打磨
