@@ -140,11 +140,17 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new IllegalArgumentException("用户不存在");
         }
+        if (StringUtils.hasText(request.getEmail())) {
+            Long emailCount = userMapper.selectCount(new LambdaQueryWrapper<User>()
+                    .eq(User::getEmail, request.getEmail())
+                    .ne(User::getId, userId));
+            if (emailCount > 0) {
+                throw new IllegalArgumentException("邮箱已被其他用户使用");
+            }
+            user.setEmail(request.getEmail());
+        }
         if (StringUtils.hasText(request.getNickname())) {
             user.setNickname(request.getNickname());
-        }
-        if (StringUtils.hasText(request.getEmail())) {
-            user.setEmail(request.getEmail());
         }
         user.setUpdatedAt(LocalDateTime.now());
         userMapper.updateById(user);
@@ -166,6 +172,7 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         user.setUpdatedAt(LocalDateTime.now());
         userMapper.updateById(user);
+        log.info("用户修改密码成功: userId={}", userId);
     }
 
     @Override
