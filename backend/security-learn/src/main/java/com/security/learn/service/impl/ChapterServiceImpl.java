@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class ChapterServiceImpl implements ChapterService {
@@ -89,14 +90,17 @@ public class ChapterServiceImpl implements ChapterService {
         }
 
         Long courseId = chapter.getCourseId();
-        Long totalChapters = chapterMapper.selectCount(
-                new LambdaQueryWrapper<Chapter>().eq(Chapter::getCourseId, courseId));
+        List<Long> chapterIds = chapterMapper.selectList(
+                new LambdaQueryWrapper<Chapter>()
+                        .eq(Chapter::getCourseId, courseId)
+                        .select(Chapter::getId))
+                .stream().map(Chapter::getId).toList();
+        Long totalChapters = (long) chapterIds.size();
         Long completedChapters = userChapterProgressMapper.selectCount(
                 new LambdaQueryWrapper<UserChapterProgress>()
                         .eq(UserChapterProgress::getUserId, userId)
                         .eq(UserChapterProgress::getStatus, 1)
-                        .inSql(UserChapterProgress::getChapterId,
-                                "SELECT id FROM chapter WHERE course_id = " + courseId));
+                        .in(UserChapterProgress::getChapterId, chapterIds));
 
         BigDecimal progressValue = BigDecimal.valueOf(completedChapters)
                 .multiply(BigDecimal.valueOf(100))
