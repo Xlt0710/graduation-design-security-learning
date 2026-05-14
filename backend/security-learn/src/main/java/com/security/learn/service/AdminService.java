@@ -11,15 +11,15 @@ public interface AdminService {
 
     List<NoticeResponse> getNotices();
 
-    NoticeResponse createNotice(NoticeRequest request);
+    NoticeResponse createNotice(Long userId, NoticeRequest request);
 
-    NoticeResponse updateNotice(Long id, NoticeRequest request);
+    NoticeResponse updateNotice(Long id, Long userId, NoticeRequest request);
 
-    void deleteNotice(Long id);
+    void deleteNotice(Long id, Long userId);
 
     List<TagResponse> getTags(String tagType);
 
-    TagResponse createTag(TagRequest request);
+    TagResponse createTag(Long userId, TagRequest request);
 
-    void deleteTag(Long id);
+    void deleteTag(Long id, Long userId);
 }
