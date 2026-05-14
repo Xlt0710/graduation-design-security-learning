@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class QuizServiceImpl implements QuizService {
@@ -129,6 +130,13 @@ public class QuizServiceImpl implements QuizService {
                         .eq(QuizRecord::getUserId, userId)
                         .orderByDesc(QuizRecord::getSubmittedAt));
 
+        Map<Long, String> quizTitleMap = Map.of();
+        if (!records.isEmpty()) {
+            List<Long> quizIds = records.stream().map(QuizRecord::getQuizId).distinct().toList();
+            quizTitleMap = quizMapper.selectBatchIds(quizIds).stream()
+                    .collect(Collectors.toMap(Quiz::getId, Quiz::getTitle));
+        }
+
         List<QuizRecordResponse> result = new ArrayList<>();
         for (QuizRecord r : records) {
             QuizRecordResponse item = new QuizRecordResponse();
@@ -136,10 +144,7 @@ public class QuizServiceImpl implements QuizService {
             item.setQuizId(r.getQuizId());
             item.setScore(r.getScore());
             item.setSubmittedAt(r.getSubmittedAt());
-
-            Quiz quiz = quizMapper.selectById(r.getQuizId());
-            item.setQuizTitle(quiz != null ? quiz.getTitle() : "");
-
+            item.setQuizTitle(quizTitleMap.getOrDefault(r.getQuizId(), ""));
             result.add(item);
         }
         return result;
