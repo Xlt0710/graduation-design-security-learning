@@ -236,6 +236,13 @@ public class LabServiceImpl implements LabService {
                         .eq(LabAttempt::getUserId, userId)
                         .orderByDesc(LabAttempt::getSubmittedAt));
 
+        Map<Long, String> labTitleMap = Map.of();
+        if (!attempts.isEmpty()) {
+            List<Long> labIds = attempts.stream().map(LabAttempt::getLabId).distinct().toList();
+            labTitleMap = labMapper.selectBatchIds(labIds).stream()
+                    .collect(Collectors.toMap(Lab::getId, Lab::getTitle));
+        }
+
         List<LabAttemptResponse> result = new ArrayList<>();
         for (LabAttempt a : attempts) {
             LabAttemptResponse item = new LabAttemptResponse();
@@ -245,10 +252,7 @@ public class LabServiceImpl implements LabService {
             item.setUsedHint(a.getUsedHint() == 1);
             item.setAttemptCount(a.getAttemptCount());
             item.setSubmittedAt(a.getSubmittedAt());
-
-            Lab lab = labMapper.selectById(a.getLabId());
-            item.setLabTitle(lab != null ? lab.getTitle() : "");
-
+            item.setLabTitle(labTitleMap.getOrDefault(a.getLabId(), ""));
             result.add(item);
         }
         return result;
