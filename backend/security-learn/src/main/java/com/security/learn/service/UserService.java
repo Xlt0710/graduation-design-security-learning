@@ -14,9 +14,7 @@ public interface UserService {
 
     LoginResponse login(LoginRequest request);
 
-    UserInfoResponse getCurrentUser(String username);
-
-    Long getUserIdByUsername(String username);
+    UserInfoResponse getCurrentUser(Long userId);
 
     UserInfoResponse updateProfile(Long userId, UpdateProfileRequest request);
 

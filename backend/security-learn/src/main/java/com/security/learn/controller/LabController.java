@@ -6,9 +6,8 @@ import com.security.learn.dto.LabDetailResponse;
 import com.security.learn.dto.LabListResponse;
 import com.security.learn.dto.LabSubmitRequest;
 import com.security.learn.dto.LabSubmitResponse;
+import com.security.learn.security.SecurityUtils;
 import com.security.learn.service.LabService;
-import com.security.learn.service.UserService;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,81 +25,62 @@ import java.util.Map;
 public class LabController {
 
     private final LabService labService;
-    private final UserService userService;
 
-    public LabController(LabService labService, UserService userService) {
+    public LabController(LabService labService) {
         this.labService = labService;
-        this.userService = userService;
     }
 
     @GetMapping
     public Result<List<LabListResponse>> list(
             @RequestParam(required = false) String vulnerabilityType,
-            @RequestParam(required = false) Integer difficulty,
-            Authentication authentication) {
-        Long userId = resolveUserId(authentication);
+            @RequestParam(required = false) Integer difficulty) {
+        Long userId = SecurityUtils.getCurrentUserId();
         return Result.success(labService.getLabList(vulnerabilityType, difficulty, userId));
     }
 
     @GetMapping("/{id}")
-    public Result<LabDetailResponse> detail(
-            @PathVariable Long id,
-            Authentication authentication) {
-        Long userId = resolveUserId(authentication);
+    public Result<LabDetailResponse> detail(@PathVariable Long id) {
+        Long userId = SecurityUtils.getCurrentUserId();
         return Result.success(labService.getLabDetail(id, userId));
     }
 
     @PostMapping("/{id}/submit")
     public Result<LabSubmitResponse> submit(
             @PathVariable Long id,
-            @RequestBody LabSubmitRequest request,
-            Authentication authentication) {
-        Long userId = requireUserId(authentication);
+            @RequestBody LabSubmitRequest request) {
+        Long userId = requireUserId();
         return Result.success(labService.submitFlag(id, request.getFlag(), userId));
     }
 
     @PostMapping("/{id}/hint")
-    public Result<Map<String, String>> hint(
-            @PathVariable Long id,
-            Authentication authentication) {
-        Long userId = requireUserId(authentication);
+    public Result<Map<String, String>> hint(@PathVariable Long id) {
+        Long userId = requireUserId();
         String hint = labService.getHint(id, userId);
         return Result.success(Map.of("hint", hint));
     }
 
     @PostMapping("/{id}/favorite")
-    public Result<Void> favorite(
-            @PathVariable Long id,
-            Authentication authentication) {
-        Long userId = requireUserId(authentication);
+    public Result<Void> favorite(@PathVariable Long id) {
+        Long userId = requireUserId();
         labService.favorite(id, userId);
         return Result.success();
     }
 
     @DeleteMapping("/{id}/favorite")
-    public Result<Void> unfavorite(
-            @PathVariable Long id,
-            Authentication authentication) {
-        Long userId = requireUserId(authentication);
+    public Result<Void> unfavorite(@PathVariable Long id) {
+        Long userId = requireUserId();
         labService.unfavorite(id, userId);
         return Result.success();
     }
 
     @GetMapping("/attempts")
-    public Result<List<LabAttemptResponse>> attempts(Authentication authentication) {
-        Long userId = requireUserId(authentication);
+    public Result<List<LabAttemptResponse>> attempts() {
+        Long userId = requireUserId();
         return Result.success(labService.getAttempts(userId));
     }
 
-    private Long resolveUserId(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
-        }
-        return userService.getUserIdByUsername(authentication.getName());
-    }
-
-    private Long requireUserId(Authentication authentication) {
-        Long userId = resolveUserId(authentication);
+    private Long requireUserId() {
+        Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
             throw new IllegalArgumentException("请先登录");
         }

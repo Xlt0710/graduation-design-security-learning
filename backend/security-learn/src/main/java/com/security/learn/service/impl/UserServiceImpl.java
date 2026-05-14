@@ -22,8 +22,11 @@ import com.security.learn.mapper.UserChapterProgressMapper;
 import com.security.learn.mapper.UserCourseProgressMapper;
 import com.security.learn.mapper.UserMapper;
 import com.security.learn.mapper.UserRoleMapper;
+import com.security.learn.common.RoleConstants;
 import com.security.learn.security.JwtUtil;
 import com.security.learn.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +37,8 @@ import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
@@ -64,13 +69,18 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void register(RegisterRequest request) {
-        if (!StringUtils.hasText(request.getUsername()) || !StringUtils.hasText(request.getPassword())) {
-            throw new IllegalArgumentException("用户名和密码不能为空");
-        }
         Long count = userMapper.selectCount(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, request.getUsername()));
         if (count > 0) {
             throw new IllegalArgumentException("用户名已存在");
+        }
+
+        if (StringUtils.hasText(request.getEmail())) {
+            Long emailCount = userMapper.selectCount(new LambdaQueryWrapper<User>()
+                    .eq(User::getEmail, request.getEmail()));
+            if (emailCount > 0) {
+                throw new IllegalArgumentException("邮箱已被注册");
+            }
         }
 
         User user = new User();
@@ -84,45 +94,42 @@ public class UserServiceImpl implements UserService {
         userMapper.insert(user);
 
         Role userRole = roleMapper.selectOne(new LambdaQueryWrapper<Role>()
-                .eq(Role::getRoleCode, "USER"));
+                .eq(Role::getRoleCode, RoleConstants.USER));
         if (userRole != null) {
             UserRole ur = new UserRole();
             ur.setUserId(user.getId());
             ur.setRoleId(userRole.getId());
             userRoleMapper.insert(ur);
         }
+
+        log.info("新用户注册成功: username={}, id={}", user.getUsername(), user.getId());
     }
 
     @Override
     public LoginResponse login(LoginRequest request) {
-        if (!StringUtils.hasText(request.getUsername()) || !StringUtils.hasText(request.getPassword())) {
-            throw new IllegalArgumentException("用户名和密码不能为空");
-        }
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, request.getUsername()));
         if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            log.warn("登录失败: username={}, 原因: 用户名或密码错误", request.getUsername());
             throw new IllegalArgumentException("用户名或密码错误");
         }
         if (user.getStatus() != null && user.getStatus() == 0) {
-            throw new IllegalArgumentException("user is disabled");
+            log.warn("登录失败: username={}, 原因: 账号已禁用", request.getUsername());
+            throw new IllegalArgumentException("账号已被禁用");
         }
         String token = jwtUtil.generateToken(user.getId(), user.getUsername());
+        log.info("用户登录成功: username={}, id={}", user.getUsername(), user.getId());
         return new LoginResponse(token, user.getId(), user.getUsername(), user.getNickname());
     }
 
     @Override
-    public Long getUserIdByUsername(String username) {
-        User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
-                .select(User::getId)
-                .eq(User::getUsername, username));
-        return user != null ? user.getId() : null;
-    }
-
-    @Override
-    public UserInfoResponse getCurrentUser(String username) {
-        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
+    public UserInfoResponse getCurrentUser(Long userId) {
+        User user = userMapper.selectById(userId);
         if (user == null) {
-            throw new IllegalArgumentException("user not found");
+            throw new IllegalArgumentException("用户不存在");
+        }
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new IllegalArgumentException("账号已被禁用");
         }
         return new UserInfoResponse(user.getId(), user.getUsername(), user.getNickname(), user.getEmail());
     }

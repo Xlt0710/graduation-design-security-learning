@@ -64,6 +64,36 @@
 - DTO 无 @Valid 声明式校验，手动 StringUtils 校验
 - 前端项目尚未启动
 
+### 认证模块代码审查结果（2026-05-12）
+
+**🔴 高危 (3项):**
+
+| 问题 | 位置 | 说明 |
+|------|------|------|
+| CORS 配置违规 | CorsConfig.java:17 | `allowedOriginPatterns("*")` + `allowCredentials(true)` 浏览器会拒绝，前端联调时直接失败 |
+| JWT userId 未利用 | JwtAuthenticationFilter.java:37-40 | claims 中有 userId 但 Authentication 只存了 username，其余模块被迫查库转换 |
+| 异常消息泄露 | GlobalExceptionHandler.java:15-16 | `Exception.getMessage()` 可能暴露 SQL 错误等内部信息给前端 |
+
+**🟡 中危 (4项):**
+
+| 问题 | 位置 | 说明 |
+|------|------|------|
+| 旧 token 不失效 | UserServiceImpl.java:159 | 改密码后旧 JWT 仍然有效 |
+| 登录无频率限制 | AuthController.java:32 | 无暴力破解防护 |
+| 禁用用户可查 /me | UserServiceImpl.java:122 | getCurrentUser() 缺少 status 检查 |
+| DTO 无声明式校验 | 全部 DTO | 缺 @NotBlank/@Size/@Email，手动 StringUtils 校验 |
+
+**🟢 低危/代码质量 (6项):**
+
+| 问题 | 说明 |
+|------|------|
+| 错误消息中英混用 | "用户名或密码错误"(中) vs "user is disabled"(英) vs "user not found"(英) |
+| 邮箱未校验唯一性 | 多个用户可注册同一邮箱 |
+| 密码无强度要求 | 接受任意非空密码 |
+| 无日志记录 | 整个认证链路无 log 输出 |
+| UserServiceImpl 职责过重 | 认证+用户资料+统计混在一起，建议拆 AuthServiceImpl |
+| 硬编码角色码 | `"USER"` 字符串散落在 register() 中，应定义常量
+
 ### 环境信息
 
 - Java 21 + Maven 3.8.5 + Node.js v24.15

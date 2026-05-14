@@ -5,9 +5,8 @@ import com.security.learn.dto.QuizDetailResponse;
 import com.security.learn.dto.QuizRecordResponse;
 import com.security.learn.dto.QuizSubmitRequest;
 import com.security.learn.dto.QuizSubmitResponse;
+import com.security.learn.security.SecurityUtils;
 import com.security.learn.service.QuizService;
-import com.security.learn.service.UserService;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,11 +21,9 @@ import java.util.List;
 public class QuizController {
 
     private final QuizService quizService;
-    private final UserService userService;
 
-    public QuizController(QuizService quizService, UserService userService) {
+    public QuizController(QuizService quizService) {
         this.quizService = quizService;
-        this.userService = userService;
     }
 
     @GetMapping("/{id}")
@@ -37,22 +34,22 @@ public class QuizController {
     @PostMapping("/{id}/submit")
     public Result<QuizSubmitResponse> submit(
             @PathVariable Long id,
-            @RequestBody QuizSubmitRequest request,
-            Authentication authentication) {
-        Long userId = requireUserId(authentication);
+            @RequestBody QuizSubmitRequest request) {
+        Long userId = requireUserId();
         return Result.success(quizService.submitQuiz(id, request.getAnswers(), userId));
     }
 
     @GetMapping("/records")
-    public Result<List<QuizRecordResponse>> records(Authentication authentication) {
-        Long userId = requireUserId(authentication);
+    public Result<List<QuizRecordResponse>> records() {
+        Long userId = requireUserId();
         return Result.success(quizService.getRecords(userId));
     }
 
-    private Long requireUserId(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+    private Long requireUserId() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
             throw new IllegalArgumentException("请先登录");
         }
-        return userService.getUserIdByUsername(authentication.getName());
+        return userId;
     }
 }

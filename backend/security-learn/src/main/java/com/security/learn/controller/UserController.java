@@ -5,8 +5,8 @@ import com.security.learn.dto.ChangePasswordRequest;
 import com.security.learn.dto.UpdateProfileRequest;
 import com.security.learn.dto.UserInfoResponse;
 import com.security.learn.dto.UserStatisticsResponse;
+import com.security.learn.security.SecurityUtils;
 import com.security.learn.service.UserService;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,37 +24,23 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public Result<UserInfoResponse> profile(Authentication authentication) {
-        return Result.success(userService.getCurrentUser(authentication.getName()));
+    public Result<UserInfoResponse> profile() {
+        return Result.success(userService.getCurrentUser(SecurityUtils.getCurrentUserId()));
     }
 
     @PutMapping("/profile")
-    public Result<UserInfoResponse> updateProfile(
-            @RequestBody UpdateProfileRequest request,
-            Authentication authentication) {
-        Long userId = requireUserId(authentication);
-        return Result.success(userService.updateProfile(userId, request));
+    public Result<UserInfoResponse> updateProfile(@RequestBody UpdateProfileRequest request) {
+        return Result.success(userService.updateProfile(SecurityUtils.getCurrentUserId(), request));
     }
 
     @PutMapping("/password")
-    public Result<Void> changePassword(
-            @RequestBody ChangePasswordRequest request,
-            Authentication authentication) {
-        Long userId = requireUserId(authentication);
-        userService.changePassword(userId, request);
+    public Result<Void> changePassword(@RequestBody ChangePasswordRequest request) {
+        userService.changePassword(SecurityUtils.getCurrentUserId(), request);
         return Result.success();
     }
 
     @GetMapping("/statistics")
-    public Result<UserStatisticsResponse> statistics(Authentication authentication) {
-        Long userId = requireUserId(authentication);
-        return Result.success(userService.getStatistics(userId));
-    }
-
-    private Long requireUserId(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalArgumentException("请先登录");
-        }
-        return userService.getUserIdByUsername(authentication.getName());
+    public Result<UserStatisticsResponse> statistics() {
+        return Result.success(userService.getStatistics(SecurityUtils.getCurrentUserId()));
     }
 }
